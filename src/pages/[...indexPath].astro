@@ -1,0 +1,81 @@
+---
+import { Image } from "astro:assets";
+import Logo from "@/assets/img/coffee.png";
+---
+
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>공사중</title>
+    </head>
+    <body>
+        <div class="container">
+            <!-- 첫 번째 div: 너비 700px -->
+            <div class="center-page">
+                <Image class="box" src={Logo} alt="펫줍.닷컴" width={700} />
+            </div>
+
+            <!-- 두 번째 div: 너비 1000px -->
+            <div class="second-box">
+                애니메이션 효과를 적용한 두 번째 div입니다. 이 영역은 최대
+                너비가 1000px로 제한되어 있으며, 화면 크기에 따라 반응형으로
+                조정됩니다.
+            </div>
+        </div>
+    </body>
+</html>
+
+<script>
+    document.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+    });
+</script>
+
+<style>
+    /* 브라우저 기본 여백 제거 */
+    :global(body) {
+        margin: 0;
+    }
+
+    /* 전체 영역: 요소를 수직(column)으로 쌓고 화면 정중앙 배치 */
+    .container {
+        display: flex;
+        flex-direction: column; /* 자식 요소들을 위아래 수직으로 배치 */
+        justify-content: center; /* 세로 방향 중앙 정렬 */
+        align-items: center; /* 가로 방향 중앙 정렬 */
+        gap: 2rem; /* 두 div 사이의 위아래 간격 (필요에 따라 조절) */
+        min-height: 100vh; /* 화면 전체 높이 확보 */
+        padding: 1rem; /* 모바일 등 좁은 화면 양옆 여백 */
+        box-sizing: border-box;
+    }
+
+    /* 첫 번째 div (700px) */
+    .center-page {
+        width: 100%;
+        max-width: 700px; /* 최대 너비 700px 고정 */
+        display: flex;
+        justify-content: center;
+    }
+
+    /* 두 번째 div (1000px) */
+    .second-box {
+        width: 100%;
+        max-width: 1000px; /* 최대 너비 1000px 고정 */
+        box-sizing: border-box;
+        /* 확인용 임시 스타일 (필요 없으면 삭제하세요) */
+        background-color: #f4f4f5;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    /* 로고 이미지 반응형 처리 */
+    .box {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        user-select: none; /* 마우스 드래그 방지 */
+        -webkit-user-drag: none;
+    }
+</style>

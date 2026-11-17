@@ -1,0 +1,108 @@
+---
+// src/layouts/LayoutCenter.astro
+// 로그인/회원가입처럼 콘텐츠를 가운데 정렬하는 Layout.
+// 테마 판별 로직은 Layout.astro(방식 A)와 동일하다.
+
+import "@/aset/global.css"; // 전체 사이트에 적용되는 스타일
+import { siteConfig, themeEnum } from "@/aset/site";
+import {
+    buildClientThemeConfigJson,
+    resolveSsrTheme,
+    getMetaColor,
+    type Theme
+} from "@/lib/theme";
+
+interface Props {
+    title?: string;
+    description?: string;
+}
+
+const { title = siteConfig.brand, description = siteConfig.description } =
+    Astro.props;
+
+const themeSetting = siteConfig.theme;
+const cookieValue = Astro.cookies.get(themeSetting.cookieKey)?.value;
+const queryValue = Astro.url.searchParams.get("theme");
+const resolved = resolveSsrTheme({
+    cookie: cookieValue,
+    query: queryValue,
+    allowSystemFallback: false
+});
+
+const serverTheme: Theme = resolved.theme ?? themeSetting.defaultTheme;
+const metaColor = getMetaColor(serverTheme);
+const canonical = new URL(
+    Astro.url.pathname,
+    Astro.site ?? "https://example.com"
+).href;
+const clientThemeConfig = buildClientThemeConfigJson();
+---
+
+<!doctype html>
+<html
+    lang="ko"
+    data-theme={resolved.hasAttribute ? resolved.theme : undefined}
+    data-theme-source={resolved.source}
+>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta name="theme-color" id="theme-color-meta" content={metaColor} />
+        <link rel="canonical" href={canonical} />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
+        <slot name="head" />
+        <script
+            is:inline
+            define:vars={{ clientThemeConfigRaw: clientThemeConfig }}
+        >
+            (function () {
+                try {
+                    var cfg = JSON.parse(clientThemeConfigRaw);
+                    var stored = localStorage.getItem(cfg.storageKey);
+                    if (
+                        stored &&
+                        cfg.themes.indexOf(stored) !== -1 &&
+                        stored !==
+                            document.documentElement.getAttribute(cfg.attribute)
+                    ) {
+                        document.documentElement.setAttribute(
+                            cfg.attribute,
+                            stored
+                        );
+                        document.cookie =
+                            cfg.cookieKey +
+                            "=" +
+                            stored +
+                            "; path=/; max-age=31536000; SameSite=Lax";
+                        var meta = document.getElementById("theme-color-meta");
+                        if (meta && cfg.metaColor[stored]) {
+                            meta.setAttribute("content", cfg.metaColor[stored]);
+                        }
+                    }
+                } catch (e) {
+                    /* 무시 */
+                }
+            })();
+        </script>
+        <style>
+            .layout-center-body {
+                display: flex;
+                min-height: 100vh;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem 1rem;
+            }
+        </style>
+    </head>
+    <body class="layout-center-body">
+        <main class="container-main">
+            <slot />
+        </main>
+    </body>
+</html>

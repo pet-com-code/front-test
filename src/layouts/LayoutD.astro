@@ -1,0 +1,99 @@
+---
+// src/layouts/LayoutD.astro
+// [방식 D] SSR 미사용 (정적 fallback 기본) + Client만 테마 적용
+// 서버는 테마를 전혀 모른 채 data-theme 없이 HTML만 만든다.
+// 테마 판별은 전적으로 클라이언트 스크립트 한 군데에서만 수행한다.
+// 장점: prerender 호환, 쿠키 SSR 관련 코드 제거
+// 단점: 첫 페인트 전 스크립트가 돌아야 해서 구조상 FOUC를 가린다 (스크립트 차단 시 무테마)
+
+import { siteConfig } from "@/web/site";
+import "../styles/global.css";
+import { buildClientThemeConfigJson, getMetaColor } from "@/lib/theme";
+
+interface Props {
+    title?: string;
+    description?: string;
+}
+
+const { title = siteConfig.brand, description = siteConfig.description } =
+    Astro.props;
+
+const themeSetting = siteConfig.theme;
+const fallbackMeta = getMetaColor(themeSetting.defaultTheme);
+const canonical = new URL(
+    Astro.url.pathname,
+    Astro.site ?? "https://example.com"
+).href;
+const clientThemeConfig = buildClientThemeConfigJson();
+---
+
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta name="theme-color" id="theme-color-meta" content={fallbackMeta} />
+        <link rel="canonical" href={canonical} />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
+        <slot name="head" />
+        <script
+            is:inline
+            define:vars={{ clientThemeConfigRaw: clientThemeConfig }}
+        >
+            (function () {
+                try {
+                    var cfg = JSON.parse(clientThemeConfigRaw);
+                    var cookieValue = null;
+                    var cookies = document.cookie.split(";");
+                    for (var i = 0; i < cookies.length; i++) {
+                        var part = cookies[i].trim().split("=");
+                        if (part[0] === cfg.cookieKey) {
+                            cookieValue = decodeURIComponent(part[1] || "");
+                            break;
+                        }
+                    }
+                    var stored =
+                        localStorage.getItem(cfg.storageKey) || cookieValue;
+                    if (stored && cfg.themes.indexOf(stored) !== -1) {
+                        document.documentElement.setAttribute(
+                            cfg.attribute,
+                            stored
+                        );
+                        localStorage.setItem(cfg.storageKey, stored);
+                        document.cookie =
+                            cfg.cookieKey +
+                            "=" +
+                            stored +
+                            "; path=/; max-age=31536000; SameSite=Lax";
+                        var meta = document.getElementById("theme-color-meta");
+                        if (meta && cfg.metaColor[stored]) {
+                            meta.setAttribute("content", cfg.metaColor[stored]);
+                        }
+                    } else if (
+                        cfg.useSystemPreference &&
+                        window.matchMedia("(prefers-color-scheme: dark)")
+                            .matches
+                    ) {
+                        document.documentElement.removeAttribute(cfg.attribute);
+                    } else {
+                        document.documentElement.setAttribute(
+                            cfg.attribute,
+                            cfg.defaultTheme
+                        );
+                    }
+                } catch (e) {
+                    /* 무시 */
+                }
+            })();
+        </script>
+    </head>
+    <body>
+        <slot />
+    </body>
+</html>

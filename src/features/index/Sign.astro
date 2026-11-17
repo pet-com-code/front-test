@@ -1,0 +1,530 @@
+---
+// src/components/auth/Sign.astro
+import CustomAlert from "@/components/alert/CustomAlert.astro";
+
+interface Props {
+    isLogin?: boolean;
+    mainCategory?: string;
+    subGroup?: string;
+    subAction?: string;
+    id?: string | null;
+}
+
+// 💡 1. 부모(Router)로부터 전달받은 주소 기반의 isLogin 값을 기본값과 함께 구조분해 할당합니다.
+const { isLogin = true } = Astro.props;
+
+// 초기 테마 및 슬라이딩 상태 설정 (로그인: dog / 회원가입: cat)
+// 💡 2. 로그인 모드일 때는 대시보드가 'dog' 테마, 회원가입 모드일 때는 'cat' 테마가 되도록 설정합니다.
+const initialTheme = isLogin ? "dog" : "cat";
+
+// 💡 3. isLogin이 false 일 때가 회원가입(SignUp) 상태입니다
+const isSignUp = !isLogin;
+---
+
+<div
+    id="authCard"
+    data-theme={initialTheme}
+    data-is-login={isLogin.toString()}
+    class:list={["auth-card", { active: isSignUp }]}
+>
+    <!-- 💡 4. active 클래스는 isSignUp이 true(즉, 회원가입 주소로 진입)일 때 붙어 슬라이딩 애니메이션이 기본 적용됩니다. -->
+    <!-- 💡 .shadow-card 클래스를 결합하여 전역 그림자 변수(--custom-shadow)가 실시간 반영되도록 처리 -->
+    <CustomAlert type="success" />
+    <CustomAlert type="error" />
+    <CustomAlert type="warning" />
+    <CustomAlert type="info" />
+
+    <div class="forms-container">
+        <!-- [ 로그인 폼 ] -->
+        <form id="signinForm" class="form-box sign-in-form">
+            <h2 class="form-title">로그인</h2>
+
+            <div class="input-group">
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="이메일"
+                    class="auth-input"
+                />
+                <i class="bx bxs-user input-icon"></i>
+            </div>
+
+            <div class="input-group">
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="비밀번호"
+                    class="auth-input"
+                />
+                <i class="bx bxs-lock-alt input-icon"></i>
+            </div>
+
+            <!-- 💡 .btn-theme 부품 클래스를 적용하여 포인트 컬러(--color-primary) 연동 -->
+            <button type="submit" class="auth-submit-btn">로그인</button>
+
+            <!-- SNS 로그인 영역 -->
+            <div class="sns-container">
+                <p class="sns-title">또는 SNS 계정으로 시작하기</p>
+                <div class="sns-buttons">
+                    {
+                        /* 💡 [수정] 외부 Hono 도메인이 아닌, Astro 내부 OAuth 엔드포인트 주소로 변경 */
+                    }
+                    <a href="/api/auth/oauth/google" class="sns-btn google-btn">
+                        <svg class="sns-icon" viewBox="0 0 48 48">
+                            <path
+                                fill="#EA4335"
+                                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                            ></path>
+                            <path
+                                fill="#4285F4"
+                                d="M46.5 24c0-1.61-.15-3.16-.42-4.69H24v8.88h12.62c-.54 2.91-2.18 5.38-4.64 7.04l7.17 5.56C43.34 36.29 46.5 30.73 46.5 24z"
+                            ></path>
+                            <path
+                                fill="#FBBC05"
+                                d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"
+                            ></path>
+                            <path
+                                fill="#34A552"
+                                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.17-5.56c-1.99 1.33-4.53 2.12-8.72 2.12-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                            ></path>
+                        </svg>
+                        <span>Google로 계속하기</span>
+                    </a>
+                    {
+                        /* 💡 [수정] 카카오 주소도 동일하게 Astro 내주 주소로 변경 */
+                    }
+                    <a href="/api/auth/oauth/kakao" class="sns-btn kakao-btn">
+                        <svg class="sns-icon" viewBox="0 0 24 24">
+                            <path
+                                fill="#191919"
+                                d="M12 3c-5.523 0-10 3.582-10 8 0 2.947 2.014 5.525 5.022 6.941l-1.02 3.736c-.126.46.38.835.753.587l4.439-2.956c.263.018.53.032.806.032 5.523 0 10-3.582 10-8s-4.477-8-10-8z"
+                            ></path>
+                        </svg>
+                        <span>카카오 로그인</span>
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- [ 회원가입 폼 ] -->
+        <form id="signupForm" class="form-box signup sign-up-form">
+            <h2 class="form-title">회원가입</h2>
+
+            <div class="input-group">
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="이메일"
+                    class="auth-input"
+                />
+                <i class="bx bxs-user input-icon"></i>
+            </div>
+
+            <div class="input-group">
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="이름"
+                    class="auth-input"
+                />
+                <i class="bx bxs-user input-icon"></i>
+            </div>
+
+            <div class="input-group">
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="비밀번호"
+                    class="auth-input"
+                />
+                <i class="bx bxs-lock-alt input-icon"></i>
+            </div>
+
+            <div class="input-group">
+                <input
+                    type="password"
+                    name="repassword"
+                    placeholder="비밀번호 확인"
+                    class="auth-input"
+                />
+                <i class="bx bxs-lock-alt input-icon"></i>
+            </div>
+
+            <button type="submit" class="auth-submit-btn">가입하기</button>
+
+            <!-- SNS 회원가입 영역 -->
+            <div class="sns-container">
+                <p class="sns-title">또는 SNS 계정으로 시작하기</p>
+                <div class="sns-buttons">
+                    <a
+                        href="/api/auth/oauth/google"
+                        class="sns-btn google-btn"
+                        id="googleLoginBtn"
+                    >
+                        <svg class="sns-icon" viewBox="0 0 48 48">
+                            <path
+                                fill="#EA4335"
+                                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                            ></path>
+                            <path
+                                fill="#4285F4"
+                                d="M46.5 24c0-1.61-.15-3.16-.42-4.69H24v8.88h12.62c-.54 2.91-2.18 5.38-4.64 7.04l7.17 5.56C43.34 36.29 46.5 30.73 46.5 24z"
+                            ></path>
+                            <path
+                                fill="#FBBC05"
+                                d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"
+                            ></path>
+                            <path
+                                fill="#34A552"
+                                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.17-5.56c-1.99 1.33-4.53 2.12-8.72 2.12-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                            ></path>
+                        </svg>
+                        <span>Google로 계속하기</span>
+                    </a>
+                    <a
+                        href="/api/auth/oauth/kakao"
+                        class="sns-btn kakao-btn"
+                        id="kakaoLoginBtn"
+                    >
+                        <svg class="sns-icon" viewBox="0 0 24 24">
+                            <path
+                                fill="#191919"
+                                d="M12 3c-5.523 0-10 3.582-10 8 0 2.947 2.014 5.525 5.022 6.941l-1.02 3.736c-.126.46.38.835.753.587l4.439-2.956c.263.018.53.032.806.032 5.523 0 10-3.582 10-8s-4.477-8-10-8z"
+                            ></path>
+                        </svg>
+                        <span>카카오 로그인</span>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- 토글 오버레이 배경 레이어 -->
+    <div class="toggle-box">
+        <div class="toggle-panel toggle-left">
+            <h1 class="panel-title">안녕하세요!</h1>
+            <p class="panel-desc">아직 계정이 없으신가요?</p>
+            <button type="button" class="panel-btn signup-btn">회원가입</button>
+        </div>
+
+        <div class="toggle-panel toggle-right">
+            <h1 class="panel-title">다시 오셨군요!</h1>
+            <p class="panel-desc">이미 계정이 있으신가요?</p>
+            <button type="button" class="panel-btn signin-btn">로그인</button>
+        </div>
+    </div>
+</div>
+
+<style is:global>
+    /* 전체 카드 컨테이너 */
+    .auth-card {
+        position: relative;
+        margin: 1.25rem;
+        height: 550px;
+        width: 850px;
+        overflow: hidden;
+        border-radius: 30px;
+        background-color: #ffffff;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        transition: background-color 0.5s ease;
+    }
+
+    /* 폼 영역 배치 */
+    .forms-container {
+        width: 100%;
+        height: 100%;
+    }
+
+    .form-box {
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        height: 100%;
+        width: 50%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem;
+        text-align: center;
+        background-color: var(--color-base-100); /* 🌟 폼 배경색 일치 */
+        transition: all 0.5s ease-in-out;
+    }
+
+    /* 좌우 슬라이드 시 보이고 안보이는 투명도 처리 최적화 */
+    .form-box.signup {
+        visibility: hidden;
+    }
+    .auth-card.active .form-box.signup {
+        opacity: 1;
+        pointer-events: auto;
+        z-index: 5;
+    }
+    .auth-card.active .form-box.sign-in-form {
+        opacity: 0;
+        pointer-events: none;
+    }
+    /*
+    .form-title {
+        margin-bottom: 1rem;
+        font-size: 1.875rem;
+        line-height: 2.25rem;
+        font-weight: 800;
+        color: #1f2937;
+    }
+*/
+    /* 입력 폼 요소, 입력 UI 요소 구조화 */
+    .input-group {
+        position: relative;
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+
+    .auth-input {
+        width: 100%;
+        padding: 0.75rem 2.75rem 0.75rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        background-color: var(
+            --color-base-200
+        ) !important; /* 🌟 입력창 안쪽 배경색 변수 대입 */
+        border: 1px solid var(--color-border) !important;
+        border-radius: 0.5rem;
+        outline: none;
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .auth-input:focus {
+        border-color: var(
+            --color-primary
+        ) !important; /* 🌟 포커스 시 테마 대표색 강조 */
+    }
+
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        color: var(--color-base-content);
+        opacity: 0.5;
+    }
+
+    /* 버튼 스타일 */
+    .auth-submit-btn {
+        margin-top: 0.75rem;
+        height: 3rem;
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+        background-color: var(--custom-main, #3b82f6);
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease;
+    }
+
+    .auth-submit-btn:hover {
+        opacity: 0.9;
+    }
+
+    /* SNS 영역 */
+    .sns-container {
+        margin-top: 1.5rem;
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .sns-title {
+        margin-bottom: 0.75rem;
+        text-align: center;
+        font-size: 0.75rem;
+        color: rgba(31, 41, 55, 0.6);
+    }
+
+    .sns-buttons {
+        display: flex;
+        width: 100%;
+        gap: 0.75rem;
+    }
+
+    .sns-btn {
+        display: flex;
+        height: 2.75rem;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .sns-icon {
+        height: 1rem;
+        width: 1rem;
+        flex-shrink: 0;
+    }
+
+    .google-btn {
+        border: 1px solid #e5e7eb;
+        background-color: #ffffff;
+        color: #1f2937;
+    }
+
+    .google-btn:hover {
+        background-color: #f9fafb;
+    }
+
+    .kakao-btn {
+        background-color: #fee500;
+        color: #191919;
+    }
+
+    .kakao-btn:hover {
+        background-color: #fada0a;
+    }
+
+    /* 슬라이딩 오버레이 레이어 */
+    .toggle-box {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        pointer-events: none;
+    }
+
+    /* 움직이는 배경 색상을 테마 프라이머리로 제어 */
+    .toggle-box::before {
+        content: "";
+        position: absolute;
+        left: -250%;
+        width: 300%;
+        height: 100%;
+        background-color: var(
+            --color-primary
+        ) !important; /* 🌟 테마 전용 칼라 유기적 매핑 */
+        border-radius: 150px;
+        z-index: 10;
+        transition:
+            left 0.7s ease-in-out,
+            background-color 0.5s ease-in-out;
+    }
+
+    .toggle-panel {
+        position: absolute;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        height: 100%;
+        width: 50%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(
+            --color-primary-content
+        ) !important; /* 🌟 가독성 전용 글자색 상속 */
+        transition: all 0.5s ease;
+        pointer-events: auto;
+    }
+
+    .toggle-left {
+        left: 0;
+        transition-delay: 0.3s;
+    }
+
+    .toggle-right {
+        right: -50%;
+    }
+
+    .panel-title {
+        font-family: var(--font-title);
+        margin-bottom: 0.5rem;
+    }
+    .panel-desc {
+        font-size: 0.875rem;
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+    }
+
+    .panel-btn {
+        height: 2.75rem;
+        width: 10rem;
+        border-radius: 0.5rem;
+        border: 2px solid var(--color-primary-content);
+        color: var(--color-primary-content);
+        font-weight: 600;
+    }
+
+    .panel-btn:hover {
+        background-color: var(--color-primary-content);
+        color: var(--color-primary);
+    }
+
+    /* 활성화(Active) 상태 - 슬라이딩 동작 */
+    .auth-card.active .toggle-box::before {
+        left: 50%;
+    }
+
+    .auth-card.active .form-box {
+        right: 50%;
+    }
+
+    .auth-card.active .form-box.signup {
+        visibility: visible;
+        z-index: 5;
+    }
+
+    .auth-card.active .toggle-panel.toggle-left {
+        left: -50%;
+        transition-delay: 0.2s;
+    }
+
+    .auth-card.active .toggle-panel.toggle-right {
+        right: 0;
+        transition-delay: 0.4s;
+    }
+</style>
+
+<script>
+    // ### 💡 추가 필수 작업: 소셜 로그인 중계 API 개설하기
+    // Astro 파일에서 버튼 주소를 `/api/auth/oauth/google` 형태로 바꿨기 때문에,
+    // **Astro 서버가 요청을 받아 Hono의 소셜 주소로 리다이렉트 시켜주는 API 파일**이 추가로 필요합니다.
+
+    // `src/pages/api/auth/oauth/[provider].ts` 경로에 파일을 생성하고 동적 라우팅 코드를 작성해 둡니다.
+
+    // import { initAuth } from "@/lib/auth";
+
+    // 💡 Astro의 라우팅 환경(View Transitions 등)에서도 안전하게 스크립트가 실행되도록
+    // 초기화 함수 호출
+    function setupAuth() {
+        const authCard = document.getElementById("authCard");
+        if (!authCard) return; // 요소 없으면 중단
+
+        // 외부 auth.ts 스크립트 규칙 초기화
+        // initAuth({
+        //     loginTheme: "dog",
+        //     signupTheme: "cat"
+        // });
+
+        // 💡 중요: 기존의 signupBtn, signinBtn 주소 이동 강제 리다이렉트 이벤트 리스너 제거!
+        // (이제 auth.ts 내부의 슬라이딩 이벤트 하나로 온전히 작동하여 자연스러운 연출이 유지됩니다.)
+    }
+
+    // 페이지 첫 로드 시 실행
+    setupAuth();
+
+    // 만약 프로젝트에 View Transitions(<ClientRouter />)를 쓰고 있다면 페이지 전환 후에도 재실행되도록 보장
+    document.addEventListener("astro:page-load", setupAuth);
+</script>

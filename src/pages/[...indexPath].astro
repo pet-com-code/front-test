@@ -4,6 +4,7 @@
 import { Image } from "astro:assets";
 import Girl from "@/assets/img/coffee-700.png";
 import GirlOld from "@/assets/img/coffee-700-old.png";
+import Sunbi from "@/assets/img/sunbi-100.png";
 ---
 
 <html lang="ko">
@@ -14,23 +15,25 @@ import GirlOld from "@/assets/img/coffee-700-old.png";
     </head>
     <body>
         <div class="container">
-            <!-- 첫 번째 div: 너비 700px -->
-            <div class="center-page">
-                <Image
-                    class="img-wrapper base-img"
-                    src={Girl}
-                    alt="펫줍.닷컴"
-                    width={700}
-                />
-                <Image
-                    class="img-wrapper fade-img"
-                    src={GirlOld}
-                    alt="펫줍.닷컴"
-                    width={700}
-                />
+            <!-- 첫 번째 영역: 너비 700px 고정 기준 박스 -->
+            <div class="stage-box">
+                <!-- 작아지지 않고 (0,0) 위치에 고정되는 Sunbi 이미지 -->
+                <div class="sunbi-wrapper">
+                    <Image src={Sunbi} alt="펫줍.닷컴" />
+                </div>
+
+                <!-- 오른쪽으로 작아지며 이미지가 전환되는 영역 (Girl -> GirlOld) -->
+                <div class="center-page">
+                    <div class="img-wrapper base-img">
+                        <Image src={Girl} alt="펫줍.닷컴" width={700} />
+                    </div>
+                    <div class="img-wrapper fade-img">
+                        <Image src={GirlOld} alt="펫줍.닷컴" width={700} />
+                    </div>
+                </div>
             </div>
 
-            <!-- 두 번째 div: 너비 1000px -->
+            <!-- 두 번째 영역: 너비 1000px (왼쪽에서 오른쪽으로 이동하는 GIF) -->
             <div class="second-box">
                 <img
                     src="/images/nun-saram-mini.gif"
@@ -43,9 +46,28 @@ import GirlOld from "@/assets/img/coffee-700-old.png";
 </html>
 
 <script>
+    // 우클릭 방지
     document.addEventListener("contextmenu", (e) => {
         e.preventDefault();
     });
+
+    // shrinkRight 애니메이션 종료 감지
+    const centerPage = document.querySelector(".center-page");
+    const sunbiWrapper = document.querySelector(".sunbi-wrapper");
+
+    if (centerPage) {
+        centerPage.addEventListener("animationend", (event) => {
+            const animEvent = event as AnimationEvent;
+
+            if (animEvent.animationName.includes("shrinkRight")) {
+                // console.log("shrinkRight 애니메이션이 끝났습니다!");
+                // Sunbi 이미지를 서서히 나타나게 함
+                if (sunbiWrapper) {
+                    sunbiWrapper.classList.add("show");
+                }
+            }
+        });
+    }
 </script>
 
 <style>
@@ -57,20 +79,71 @@ import GirlOld from "@/assets/img/coffee-700-old.png";
     /* 전체 영역: 요소를 수직(column)으로 쌓고 화면 정중앙 배치 */
     .container {
         display: flex;
-        flex-direction: column; /* 자식 요소들을 위아래 수직으로 배치 */
-        justify-content: center; /* 세로 방향 중앙 정렬 */
-        align-items: center; /* 가로 방향 중앙 정렬 */
-        gap: 2rem; /* 두 div 사이의 위아래 간격 (필요에 따라 조절) */
-        min-height: 100vh; /* 화면 전체 높이 확보 */
-        padding: 1rem; /* 모바일 등 좁은 화면 양옆 여백 */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        min-height: 100vh;
+        padding: 1rem;
         box-sizing: border-box;
     }
 
-    /* 첫 번째 div (700px) */
+    /* 첫 번째 영역 전체를 감싸는 700px 고정 기준 박스 */
+    .stage-box {
+        width: 100%;
+        max-width: 700px;
+        position: relative; /* .sunbi-wrapper의 (0, 0) 기준점 */
+    }
+
+    /* (0, 0) 위치에 원래 크기 그대로 고정되는 Sunbi 이미지 */
+    .sunbi-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        pointer-events: none;
+        opacity: 0; /* 처음에는 완전히 숨김 */
+        transition: opacity 2s ease-in-out; /* 2초 동안 서서히 나타남 (원하는 초 단위로 수정 가능) */
+    }
+
+    /* shrinkRight 종료 후 자바스크립트로 추가할 클래스 */
+    .sunbi-wrapper.show {
+        opacity: 1;
+    }
+
+    .sunbi-wrapper img {
+        display: block;
+        width: 223px; /* 원하는 정확한 가로 크기 (또는 auto) */
+        height: 400px; /* 원하는 정확한 세로 크기 */
+        object-fit: contain; /* 이미지가 찌그러지지 않게 비율 유지 */
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    .sunbi-wrapper :global(img) {
+        display: block;
+        width: auto;
+        height: 200px;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    /* 오른쪽으로 작아지는 영역 */
     .center-page {
         width: 100%;
-        max-width: 700px; /* 최대 너비 700px 고정 */
-        position: relative; /* 자식 래퍼들을 겹치기 위한 기준점 */
+        max-width: 700px;
+        position: relative;
+        transform-origin: right center;
+        animation: shrinkRight 18s ease-in-out 2s forwards;
+    }
+
+    @keyframes shrinkRight {
+        from {
+            transform: scale(1);
+        }
+        to {
+            transform: scale(0.8);
+        }
     }
 
     /* 두 이미지 래퍼를 정확히 같은 크기로 맞춤 */
@@ -78,7 +151,6 @@ import GirlOld from "@/assets/img/coffee-700-old.png";
         width: 100%;
     }
 
-    /* 내부 img 태그 크기 강제 일치 */
     .img-wrapper :global(img) {
         width: 100%;
         height: auto;
@@ -87,7 +159,21 @@ import GirlOld from "@/assets/img/coffee-700-old.png";
         -webkit-user-drag: none;
     }
 
-    /* 위에 겹쳐지는 GirlOld 래퍼 설정 */
+    /* 아래에 깔리는 첫 번째 이미지 (Girl)가 서서히 투명해짐 */
+    .base-img {
+        animation: fadeOutYoung 18s ease-in-out 2s forwards;
+    }
+
+    @keyframes fadeOutYoung {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+
+    /* 위에 겹쳐지는 두 번째 이미지 (GirlOld)가 서서히 나타남 */
     .fade-img {
         position: absolute;
         top: 0;
@@ -98,7 +184,6 @@ import GirlOld from "@/assets/img/coffee-700-old.png";
         animation: fadeInOld 18s ease-in-out 2s forwards;
     }
 
-    /* 만약 두 원본 이미지의 세로 비율이 미세하게 다를 경우 삐져나오지 않게 맞춤 */
     .fade-img :global(img) {
         height: 100%;
         object-fit: cover;
@@ -139,40 +224,6 @@ import GirlOld from "@/assets/img/coffee-700-old.png";
         to {
             left: 100%;
             transform: translateX(-100%);
-        }
-    }
-
-    /* 아래에 깔리는 첫 번째 이미지 (Girl)가 서서히 투명해짐 */
-    .base-img {
-        animation: fadeOutYoung 18s ease-in-out 2s forwards;
-    }
-
-    @keyframes fadeOutYoung {
-        from {
-            opacity: 1; /* 처음엔 100% 보임 (불투명) */
-        }
-        to {
-            opacity: 0; /* 끝날 땐 완전히 투명해짐 */
-        }
-    }
-
-    /* 위에 겹쳐지는 두 번째 이미지 (GirlOld)가 서서히 나타남 */
-    .fade-img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0; /* 처음엔 완전히 투명 */
-        animation: fadeInOld 18s ease-in-out 2s forwards;
-    }
-
-    @keyframes fadeInOld {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1; /* 끝날 땐 100% 보임 (불투명) */
         }
     }
 </style>
